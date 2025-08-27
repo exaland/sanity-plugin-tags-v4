@@ -229,7 +229,19 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         }),
       },
       classNames: prefersDark
-        ? undefined
+        ? {
+            container: () => styles.container,
+            control: () => styles.control,
+            input: () => styles.input,
+            menu: () => styles.menu,
+            option: () => styles.option,
+            indicatorSeparator: () => styles.indicatorSeparator,
+            placeholder: () => styles.placeholder,
+            singleValue: () => styles.singleValue,
+            multiValue: () => styles.multiValue,
+            multiValueLabel: () => styles.multiValueLabel,
+            multiValueRemove: () => styles.multiValueRemove,
+          }
         : {
             container: () => styles.container,
             control: () => styles.control,
