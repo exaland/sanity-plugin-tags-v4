@@ -9,7 +9,7 @@ A multi-tag input for sanity studio. Fully featured with autocomplete capabiliti
 ## Install
 
 
-Sanity v4: `npm install sanity-v4-plugin-tags`
+Sanity v4: `npm install sanity-plugin-tags-v4`
 Sanity v3: `npm install sanity-plugin-tags`  
 Sanity v2: `sanity install tags`
 
