@@ -1,6 +1,6 @@
-# sanity-plugin-tags
+# sanity-v4-plugin-tags
 
-> This is a **Sanity Studio v3** plugin.
+> This is a **Sanity Studio v4** plugin.
 
 A multi-tag input for sanity studio. Fully featured with autocomplete capabilities, live updates, predefined tag options, style and component customizability, and much more.
 
@@ -8,6 +8,8 @@ A multi-tag input for sanity studio. Fully featured with autocomplete capabiliti
 
 ## Install
 
+
+Sanity v4: `npm install sanity-v4-plugin-tags`
 Sanity v3: `npm install sanity-plugin-tags`  
 Sanity v2: `sanity install tags`
 
