@@ -9,8 +9,8 @@ jobs:
       - name: Checkout Git Repository
         uses: actions/checkout@v3
       - run: |
-          git config user.name pcbowers
-          git config user.email pcbowers@gmail.com
+          git config user.name exaland
+          git config user.email exaland@gmail.com
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
