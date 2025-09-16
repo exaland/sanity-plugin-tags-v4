@@ -133,10 +133,13 @@ To use the title and slug fields from the referenced schema type, set the custom
 {
   // ...
   customLabel: 'title'
-  customValue: 'slug.current'
+  customValue: 'slug'
   // ...
 }
 ```
+
+The plugin automatically handles slug objects by extracting the `.current` value, so you can use `'slug'` directly.
+
 
 ### includeFromRelated
 
