@@ -169,7 +169,7 @@ export const getTagsFromReference = ({
   const query = `
   *[ _type == $document && defined(@[$customLabel]) && defined(@[$customValue])] {
     _id,
-    "value": @[$customValue],
+    "value": coalesce(@[$customValue].current,@[$customValue]),
     "label": @[$customLabel]
   }
   `
@@ -226,7 +226,7 @@ export const getTagsFromRelated = ({
       (!$isMulti && defined(@[$field][$customLabel]) && defined(@[$field][$customValue])) ||
       ($isMulti && defined(@[$field][]->[$customLabel]) && defined(@[$field][]->[$customValue])) ||
       ($isMulti && defined(@[$field][][$customLabel]) && defined(@[$field][][$customValue]))
-    ) 
+    )
   ][$field]
   `
 
