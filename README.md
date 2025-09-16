@@ -128,6 +128,16 @@ If you already have a sanity schema that contains a tag-like structure and want 
 }
 ```
 
+To use the title and slug fields from the referenced schema type, set the custom field mappings:
+```javascript
+{
+  // ...
+  customLabel: 'title'
+  customValue: 'slug.current'
+  // ...
+}
+```
+
 ### includeFromRelated
 
 `default: false`
