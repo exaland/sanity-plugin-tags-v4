@@ -84,6 +84,9 @@
     "P Christopher Bowers <pcbowers@gmail.com>",
     "Leo Baker-Hytch <l.bakerhytch@gmail.com>"
   ],
+  "overrides": {
+  "esbuild": "0.25.9"
+}
   "sanityPlugin": {
    "verifyPackage": {
       "tsc": false
