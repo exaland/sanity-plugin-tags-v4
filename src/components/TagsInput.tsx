@@ -24,6 +24,7 @@ import {useLoading, useOptions} from '../utils/hooks'
 import {
   convertDocumentToTag,
   createReferenceDocument,
+  syncReferencesAcrossStudio,
   prepareTags,
   revertTags,
 } from '../utils/mutators'
@@ -43,7 +44,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
     const documentType = useFormValue(['_type']) as string
     const [selected, setSelected] = React.useState<RefinedTags>(undefined)
     const [isLoading, , setLoadOption] = useLoading({})
-    const [options, , setTagOption] = useOptions({})
+    const [options, groupOptions, setTagOption] = useOptions({})
     const prefersDark = usePrefersDark()
 
     const {
@@ -82,6 +83,101 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       schemaType.options && allowCreate && isReference && !includeFromReference
     const isReferencePredefinedWarning =
       schemaType.options && !!schemaType.options.predefinedTags && isReference
+    // Kick off a global cleanup pass across the studio (fire-and-forget)
+    useEffect(() => {
+      if (!includeFromReference || typeof includeFromReference !== 'string') return
+
+      // Determine the field path string for this input
+      const fieldPath = Array.isArray((props as any).path)
+        ? (props as any).path.filter(Boolean).join('.')
+        : (schemaType?.name as string)
+
+      if (!fieldPath) return
+
+      syncReferencesAcrossStudio({
+        client,
+        field: fieldPath,
+        refSchemaType: includeFromReference,
+        documentType,
+        isReferenceField: isReference,
+        isMulti,
+        customLabel,
+        customValue,
+      })
+      // intentionally no deps aside from the toggles to avoid reruns
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [includeFromReference])
+    // check for and remove deleted references
+    const checkAndRemoveDeletedReferences = useCallback(
+      (currentSelected: Tag[], availableReferences: Tag[]) => {
+        if (!includeFromReference) {
+          return currentSelected
+        }
+
+        const availableIds = new Set(availableReferences.map((tag) => tag._id))
+
+        const validSelected = currentSelected.filter((tag) => {
+          const isDeleted = tag._id && !availableIds.has(tag._id)
+
+          return !isDeleted
+        })
+
+        if (validSelected.length === currentSelected.length) {
+        }
+
+        return validSelected
+      },
+      [includeFromReference]
+    )
+
+    // Memoized identity keys to stabilize dependencies
+    const selectedIdsKey = React.useMemo(() => {
+      return Array.isArray(selected)
+        ? selected
+            .map((t) => t?._id)
+            .filter(Boolean)
+            .sort()
+            .join(',')
+        : ''
+    }, [selected])
+
+    const referenceIdsKey = React.useMemo(() => {
+      const refs = groupOptions.referenceTags || []
+      return Array.isArray(refs)
+        ? refs
+            .map((t) => t?._id)
+            .filter(Boolean)
+            .sort()
+            .join(',')
+        : ''
+    }, [groupOptions.referenceTags])
+
+    const runDeletedReferenceCleanup = useCallback(() => {
+      if (!includeFromReference) return
+
+      const selectedArr = Array.isArray(selected) ? selected : []
+      const referenceArr = groupOptions.referenceTags || []
+      if (!selectedArr.length || !referenceArr.length) return
+
+      const cleanedSelected = checkAndRemoveDeletedReferences(selectedArr, referenceArr)
+      if (cleanedSelected.length !== selectedArr.length) {
+        setSelected(cleanedSelected)
+      }
+    }, [selectedIdsKey, referenceIdsKey])
+
+    const isDeletedReference = useCallback(
+      (tag: Tag, availableReferences: Tag[]) => {
+        if (!includeFromReference || !tag._id) return false
+        const availableIds = new Set(availableReferences.map((reference) => reference._id))
+        return !availableIds.has(tag._id)
+      },
+      [includeFromReference]
+    )
+
+    // Run deleted reference cleanup whenever selected/reference IDs change
+    useEffect(() => {
+      runDeletedReferenceCleanup()
+    }, [])
 
     // get all tag types when the component loads
     useEffect(() => {
@@ -97,13 +193,48 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       let relatedSubscription: GeneralSubscription = defaultSubscription
       let referenceSubscription: GeneralSubscription = defaultSubscription
 
-      // set the loading state for each option group
       setLoadOption({
         selectedTags: true,
         predefinedTags: true,
         referenceTags: true,
         relatedTags: true,
       })
+
+      let selectedRef: Tag[] = []
+      let referenceRef: Tag[] = []
+
+      // Auto-remove deleted references once both lists are present
+      const maybeCleanupDeletedReferences = () => {
+        if (typeof includeFromReference !== 'string') return
+        if (!selectedRef.length || !referenceRef.length) return
+
+        const refIds = new Set(referenceRef.map((t) => t._id).filter(Boolean))
+        const cleaned = selectedRef.filter((t) => !t._id || refIds.has(t._id))
+
+        // Only update if IDs changed
+        const prevKey = selectedRef
+          .map((t) => t?._id)
+          .filter(Boolean)
+          .sort()
+          .join(',')
+        const nextKey = cleaned
+          .map((t) => t?._id)
+          .filter(Boolean)
+          .sort()
+          .join(',')
+        if (nextKey === prevKey) return
+
+        setSelected(cleaned as RefinedTags)
+
+        const tagsForEvent = revertTags({
+          tags: cleaned as RefinedTags,
+          customLabel,
+          customValue,
+          isMulti,
+          isReference,
+        })
+        onChange(tagsForEvent ? set(tagsForEvent) : unset(tagsForEvent))
+      }
 
       // setup the selected observable
       selectedSubscription = getSelectedTags({
@@ -114,6 +245,14 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         isMulti,
       }).subscribe((tags: Tag[]) => {
         setSelected(tags)
+        if (Array.isArray(tags)) {
+          selectedRef = tags as Tag[]
+        } else if (tags) {
+          selectedRef = [tags] as unknown as Tag[]
+        } else {
+          selectedRef = []
+        }
+        maybeCleanupDeletedReferences()
         setLoadOption({selectedTags: false})
       })
 
@@ -137,6 +276,30 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
           customValue,
         }).subscribe((tags: Tag[]) => {
           setTagOption({referenceTags: tags})
+          // After reference updates, run sync for all field types
+          const fieldPath = Array.isArray((props as any).path)
+            ? (props as any).path.filter(Boolean).join('.')
+            : (schemaType?.name as string)
+          if (fieldPath) {
+            syncReferencesAcrossStudio({
+              client,
+              field: fieldPath,
+              refSchemaType: includeFromReference,
+              documentType,
+              isReferenceField: isReference,
+              isMulti,
+              customLabel,
+              customValue,
+            }).catch((err) => console.error('❌ Sync after reference update failed:', err))
+          }
+          if (Array.isArray(tags)) {
+            referenceRef = tags as Tag[]
+          } else if (tags) {
+            referenceRef = [tags] as unknown as Tag[]
+          } else {
+            referenceRef = []
+          }
+          maybeCleanupDeletedReferences()
           setLoadOption({referenceTags: false})
         })
       } else {
@@ -199,6 +362,8 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         }).subscribe((tags: Tag[]) => {
           setTagOption({referenceTags: tags})
           setLoadOption({referenceTags: false})
+
+          // Cleanup is handled by the dedicated useEffect to avoid re-render loops
         })
 
         // Clean up subscription after a short delay to allow for the update
@@ -284,14 +449,45 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
           else handleChange(newCreateValue)
         } catch (error) {
           console.error('Failed to create tag:', error)
-          // You might want to show a toast notification here
         } finally {
           // unset the load state
           setLoadOption({handleCreate: false})
         }
       },
-      [onChange, selected]
+      [
+        handleChange,
+        setLoadOption,
+        selected,
+        includeFromReference,
+        isReference,
+        createReferenceDocumentWithOptions,
+        customLabel,
+        customValue,
+        client,
+        refreshReferenceOptions,
+        onCreate,
+        allowCreate,
+      ]
     )
+
+    // format option labels to show deleted references
+    const formatOptionLabel = (option: Tag) => {
+      const isDeleted =
+        includeFromReference &&
+        option._id &&
+        groupOptions.referenceTags &&
+        isDeletedReference(option, groupOptions.referenceTags)
+
+      if (isDeleted) {
+        return (
+          <div style={{color: '#ff6b6b', fontStyle: 'italic'}}>
+            {option.label} <span style={{fontSize: '0.8em'}}>(deleted)</span>
+          </div>
+        )
+      }
+
+      return option.label
+    }
 
     // set up the options for react-select
     const selectOptions = {
@@ -300,6 +496,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       isMulti,
       options,
       value: selected,
+      formatOptionLabel,
       isValidNewOption: (inputValue: string, selectedValues: Tag[], selectedOptions: Tag[]) => {
         return checkValid(inputValue, [
           ...selectedOptions.map((opt) => opt.value),

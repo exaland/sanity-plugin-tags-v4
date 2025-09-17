@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import {SanityClient} from '@sanity/client'
 import {GeneralTag, RefinedTags, RefTag, Tag, UnrefinedTags} from '../types'
 import {get, isPlainObject, setAtPath} from './helpers'
@@ -251,8 +252,6 @@ export const createReferenceDocument = async ({
   const valueField = schema?.fields?.find((field: any) => field.name === customValue)
   const isValueFieldSlug = valueField?.type?.name === 'slug'
 
-  const transaction = client.transaction()
-
   // Create the document with the specified schema type
   const newDoc = await onCreateReference(inputValue, refSchemaType)
 
@@ -269,15 +268,9 @@ export const createReferenceDocument = async ({
     ...processedDoc,
   }
 
-  transaction.create(docToCreate)
-
   try {
-    const result = await transaction.commit()
-
-    const createdDocId = result.documentIds[0]
-
-    // Fetch the created document to get its data
-    const createdDoc = await client.fetch('*[_id == $id][0]', {id: createdDocId})
+    // Use client.create() directly - much simpler!
+    const createdDoc = await client.create(docToCreate)
 
     // Return the created document data (not as a reference)
     // This allows it to be used both for reference fields and tag fields
@@ -326,4 +319,165 @@ export const convertDocumentToTag = (
     _labelTemp: labelValue,
     _valueTemp: valueValue,
   }
+}
+
+interface SyncReferencesInput {
+  client: SanityClient
+  field: string
+  refSchemaType: string
+  documentType: string
+  isReferenceField: boolean
+  isMulti: boolean
+  customLabel?: string
+  customValue?: string
+}
+
+/**
+ * Comprehensive sync function that handles both cleanup and value updates for referenced documents.
+ * - Removes deleted reference documents from selections
+ * - Updates object-based tag fields' label/value when the referenced document changes
+ * - Only operates on documents of the same type to prevent cross-contamination
+ */
+export const syncReferencesAcrossStudio = async ({
+  client,
+  field,
+  refSchemaType,
+  documentType,
+  isReferenceField,
+  isMulti,
+  customLabel = 'label',
+  customValue = 'value',
+}: SyncReferencesInput): Promise<{patched: number; examined: number}> => {
+  // 1) Gather valid IDs and values from the referenced document type
+  const referencedDocs: Array<{_id: string; label: string | null; value: string | null}> =
+    await client.fetch(
+      `*[_type == $refType]{
+      _id,
+      "label": @[$customLabel],
+      "value": coalesce(@[$customValue].current, @[$customValue])
+    }`,
+      {
+        refType: refSchemaType,
+        customLabel: customLabel.split('.')[0],
+        customValue: customValue.split('.')[0],
+      }
+    )
+
+  const validIds = new Set(referencedDocs.map((d) => d._id))
+  const validValues = new Set(
+    referencedDocs
+      .map((d) => (d && d.value !== null && d.value !== undefined ? String(d.value) : ''))
+      .filter(Boolean)
+  )
+
+  // Build lookup for value updates (only for object-based tag fields)
+  const referenceLookup: Record<string, {label: string | null; value: string | null}> =
+    Object.fromEntries(
+      referencedDocs.map((d) => [
+        d._id,
+        {
+          label: d.label ?? null,
+          value: d.value === null || d.value === undefined ? null : String(d.value),
+        },
+      ])
+    )
+
+  // 2) Find candidate documents of the same type that include the field
+  const candidates: Array<{_id: string; value: any}> = await client.fetch(
+    `*[
+      _type == $documentType &&
+      defined(@[$field])
+    ]{ _id, "value": @[$field] }`,
+    {field, documentType}
+  )
+
+  if (!candidates.length) return {patched: 0, examined: 0}
+
+  // 3) Build a transaction with necessary patches
+  let patched = 0
+  let examined = 0
+  let tx = client.transaction()
+
+  for (const doc of candidates) {
+    examined += 1
+    const current = doc.value
+
+    // Helper to filter non-ref items against validValues (for cleanup)
+    const filterNonRef = (item: any) => {
+      const val = item && (item[customValue] ?? null)
+      if (val === null || val === undefined) return false
+      const str =
+        typeof val === 'object' && val && 'current' in val
+          ? String((val as any).current)
+          : String(val)
+      return validValues.has(str)
+    }
+
+    // Helper to filter refs against validIds (for cleanup)
+    const filterRef = (item: any) => Boolean(item && item._ref && validIds.has(item._ref))
+
+    // Helper to apply value updates (for object-based tag fields)
+    const applyValueUpdates = (item: any): {changed: boolean; next: any} => {
+      if (!item || typeof item !== 'object') return {changed: false, next: item}
+      const refId = (item as any)._id
+      if (!refId || !(refId in referenceLookup)) return {changed: false, next: item}
+      const next = {...item}
+
+      const refVals = referenceLookup[refId]
+      const currentLabel = get(next, customLabel)
+      const currentValue = get(next, customValue)
+
+      let changed = false
+      if (refVals.label !== null && refVals.label !== currentLabel) {
+        setAtPath(next, customLabel, refVals.label)
+        changed = true
+      }
+      if (refVals.value !== null && String(refVals.value) !== String(currentValue ?? '')) {
+        setAtPath(next, customValue, refVals.value)
+        changed = true
+      }
+      return {changed, next}
+    }
+
+    if (Array.isArray(current)) {
+      // Handle array fields
+      let anyChanged = false
+      const processed = current
+        .filter(isReferenceField ? filterRef : filterNonRef) // Cleanup: remove invalid items
+        .map((item) => {
+          if (!isReferenceField) {
+            // For object-based tag fields, also apply value updates
+            const {changed, next} = applyValueUpdates(item)
+            if (changed) anyChanged = true
+            return next
+          }
+          return item
+        })
+
+      if (processed.length !== current.length || anyChanged) {
+        tx = tx.patch(doc._id, {set: {[field]: processed}})
+        patched += 1
+      }
+    } else if (current && typeof current === 'object') {
+      // Handle single object fields
+      const isValid = isReferenceField ? filterRef(current) : filterNonRef(current)
+
+      if (!isValid) {
+        // Cleanup: remove invalid single items
+        tx = tx.patch(doc._id, {unset: [field]})
+        patched += 1
+      } else if (!isReferenceField) {
+        // For object-based tag fields, apply value updates
+        const {changed, next} = applyValueUpdates(current)
+        if (changed) {
+          tx = tx.patch(doc._id, {set: {[field]: next}})
+          patched += 1
+        }
+      }
+    }
+  }
+
+  if (patched === 0) return {patched: 0, examined}
+  await tx.commit()
+  return {patched, examined}
 }

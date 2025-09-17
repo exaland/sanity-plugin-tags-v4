@@ -141,6 +141,11 @@ To use the title and slug fields from the referenced schema type, set the custom
 
 The plugin automatically handles slug objects by extracting the `.current` value, so you can use `'slug'` directly.
 
+When using `includeFromReference`, the plugin automatically:
+
+- Removes deleted reference documents from selections across all documents of the same type
+- Updates object-based tag fields' label/value when the referenced document changes
+
 ### includeFromRelated
 
 `default: false`
