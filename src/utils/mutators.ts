@@ -1,6 +1,7 @@
 import {SanityClient} from '@sanity/client'
 import {GeneralTag, RefinedTags, RefTag, Tag, UnrefinedTags} from '../types'
 import {get, isPlainObject, setAtPath} from './helpers'
+import {uuid} from '@sanity/uuid'
 
 interface PrepareTagInput {
   customLabel?: string
@@ -215,4 +216,114 @@ export function revertTags<IsReference extends boolean, IsMulti extends boolean>
 
   // revert tag
   return revert(tag)
+}
+
+interface CreateReferenceDocumentInput {
+  client: SanityClient
+  inputValue: string
+  refSchemaType: string
+  customLabel: string
+  customValue: string
+  onCreateReference: (inputValue: string, schemaType: string) => GeneralTag | Promise<GeneralTag>
+  schema: any // Sanity schema object
+}
+
+/**
+ * Creates a reference document in Sanity and returns the document data
+ * @param client Sanity client instance
+ * @param inputValue The input value from the user
+ * @param refSchemaType The schema type to create
+ * @param customLabel Custom label field mapping
+ * @param customValue Custom value field mapping
+ * @param onCreateReference Function to customize document creation
+ * @returns The created document data
+ */
+export const createReferenceDocument = async ({
+  client,
+  inputValue,
+  refSchemaType,
+  customLabel,
+  customValue,
+  onCreateReference,
+  schema,
+}: CreateReferenceDocumentInput): Promise<GeneralTag> => {
+  // Find the field definition for customValue to check if it's a slug
+  const valueField = schema?.fields?.find((field: any) => field.name === customValue)
+  const isValueFieldSlug = valueField?.type?.name === 'slug'
+
+  const transaction = client.transaction()
+
+  // Create the document with the specified schema type
+  const newDoc = await onCreateReference(inputValue, refSchemaType)
+
+  // If the value field is a slug type, convert the value to slug format
+  const processedDoc = {...newDoc}
+  if (isValueFieldSlug && processedDoc[customValue]) {
+    const slugValue = processedDoc[customValue].toLowerCase().replace(/\W/g, '-')
+    processedDoc[customValue] = {current: slugValue}
+  }
+
+  const docToCreate = {
+    _id: uuid(),
+    _type: refSchemaType,
+    ...processedDoc,
+  }
+
+  transaction.create(docToCreate)
+
+  try {
+    const result = await transaction.commit()
+
+    const createdDocId = result.documentIds[0]
+
+    // Fetch the created document to get its data
+    const createdDoc = await client.fetch('*[_id == $id][0]', {id: createdDocId})
+
+    // Return the created document data (not as a reference)
+    // This allows it to be used both for reference fields and tag fields
+    const documentTag = {
+      _id: createdDoc._id,
+      _type: createdDoc._type,
+      // Include the label and value for display purposes
+      [customLabel]: get(createdDoc, customLabel),
+      [customValue]: get(createdDoc, customValue),
+    }
+
+    return documentTag
+  } catch (error) {
+    console.error('❌ Failed to create reference document:', error)
+    throw error
+  }
+}
+
+/**
+ * Converts a created document to a tag object for use in tag fields
+ * @param createdDoc The document created in Sanity
+ * @param customLabel The custom label field name
+ * @param customValue The custom value field name
+ * @returns A tag object ready for react-select
+ */
+export const convertDocumentToTag = (
+  createdDoc: Record<string, any>,
+  customLabel: string,
+  customValue: string
+): Tag => {
+  // Handle slug fields properly when extracting values
+  const labelValue = get(createdDoc, customLabel)
+  let valueValue = get(createdDoc, customValue)
+
+  // If it's a slug field, extract the current value
+  if (valueValue && typeof valueValue === 'object' && 'current' in valueValue) {
+    valueValue = valueValue.current
+  }
+
+  return {
+    _type: 'tag',
+    _key: valueValue,
+    _id: createdDoc._id,
+    label: labelValue,
+    value: valueValue,
+    _labelTemp: labelValue,
+    _valueTemp: valueValue,
+  }
 }

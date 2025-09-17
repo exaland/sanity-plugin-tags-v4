@@ -8,7 +8,6 @@ A multi-tag input for sanity studio. Fully featured with autocomplete capabiliti
 
 ## Install
 
-
 Sanity v4: `npm install sanity-plugin-tags-v4`
 Sanity v3: `npm install sanity-plugin-tags`  
 Sanity v2: `sanity install tags`
@@ -59,6 +58,7 @@ Dive into the [Options Section](#options) for more advanced use cases like prede
     customValue?: string
     allowCreate?: boolean
     onCreate?: (inputValue: string) => Tag | Promise<Tag>
+    onCreateReference?: (inputValue: string, schemaType: string) => Tag | Promise<Tag>
     checkValid?: (inputValue: string, currentValues: string[]) => boolean
     reactSelectOptions?: {
       [key: string]: any
@@ -129,6 +129,7 @@ If you already have a sanity schema that contains a tag-like structure and want 
 ```
 
 To use the title and slug fields from the referenced schema type, set the custom field mappings:
+
 ```javascript
 {
   // ...
@@ -139,7 +140,6 @@ To use the title and slug fields from the referenced schema type, set the custom
 ```
 
 The plugin automatically handles slug objects by extracting the `.current` value, so you can use `'slug'` directly.
-
 
 ### includeFromRelated
 
@@ -191,12 +191,27 @@ _Note: If you set this option, all tags specified by `predefinedTags` and the st
 
 `default: true`
 
-By default, new tags can be created inline from this input. If you implement the input with a reference, this does not work. See [Parts](#parts) for more information.
+By default, new tags can be created inline from this input. When used with references, this now works if you also specify `includeFromReference` - the plugin will create new documents of the specified reference type inline.
 
 ```javascript
 {
   // ...
   allowCreate: false
+  // ...
+}
+```
+
+To enable inline creation for reference fields:
+
+```javascript
+{
+  // ...
+  allowCreate: true,
+  includeFromReference: 'category', // Documents of type 'category' will be created
+  onCreateReference: (inputValue, schemaType) => ({
+    title: inputValue,
+    slug: inputValue.toLowerCase().replace(/\W/g, '-')
+  })
   // ...
 }
 ```
@@ -213,6 +228,24 @@ If you want to edit the label or value of the tag when a new one is created befo
   onCreate: (value) => ({
     label: value,
     value: value.toLowerCase().replace(/\W/g, '-'),
+  })
+  // ...
+}
+```
+
+### onCreateReference
+
+`default: (value, schemaType) => ({ [customLabel]: value, [customValue]: value})`
+
+This hook is called when creating reference documents inline. It works similarly to `onCreate` but is specifically for reference document creation. The function receives the input value and the schema type of the reference document being created.
+
+```javascript
+{
+  // ...
+  onCreateReference: (inputValue, schemaType) => ({
+    title: inputValue,
+    slug: inputValue.toLowerCase().replace(/\W/g, '-'),
+    description: `Auto-created ${schemaType}: ${inputValue}`,
   })
   // ...
 }

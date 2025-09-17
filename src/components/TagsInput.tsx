@@ -1,8 +1,9 @@
+/* eslint-disable no-console */
 import React, {forwardRef, useCallback, useEffect} from 'react'
 import Select from 'react-select'
 import CreatableSelect from 'react-select/creatable'
 import StateManagedSelect from 'react-select/dist/declarations/src/stateManager'
-import {set, unset, useFormValue} from 'sanity'
+import {set, unset, useFormValue, useSchema} from 'sanity'
 import {usePrefersDark} from '@sanity/ui'
 import {
   GeneralSubscription,
@@ -13,9 +14,19 @@ import {
   TagsInputProps,
 } from '../types'
 import {useClient} from '../utils/client'
-import {isSchemaMulti, isSchemaReference, setAtPath} from '../utils/helpers'
+import {
+  createDefaultOnCreateReference,
+  isSchemaMulti,
+  isSchemaReference,
+  setAtPath,
+} from '../utils/helpers'
 import {useLoading, useOptions} from '../utils/hooks'
-import {prepareTags, revertTags} from '../utils/mutators'
+import {
+  convertDocumentToTag,
+  createReferenceDocument,
+  prepareTags,
+  revertTags,
+} from '../utils/mutators'
 import {
   getPredefinedTags,
   getSelectedTags,
@@ -25,17 +36,10 @@ import {
 import {ReferenceCreateWarning, ReferencePredefinedWarning} from './ReferenceWarnings'
 import styles from './TagsInput.module.css'
 
-// TODO: Allow reference creation inline
-// TODO: Allow reference merging inline (stretch ??)
-// TODO: Allow reference editing inline (stretch ??)
-// TODO: Allow reference deleting inline (stretch ??)
-// TODO: Allow object merging inline (stretch ??)
-// TODO: Allow object editing inline (stretch ??)
-// TODO: Allow object deleting inline (stretch ??)
-
 export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
   (props: TagsInputProps, ref: React.Ref<Select>) => {
     const client = useClient()
+    const schema = useSchema()
     const documentType = useFormValue(['_type']) as string
     const [selected, setSelected] = React.useState<RefinedTags>(undefined)
     const [isLoading, , setLoadOption] = useLoading({})
@@ -67,13 +71,15 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         setAtPath(tag, customValue, val)
         return tag
       },
+      onCreateReference = createDefaultOnCreateReference(customLabel, customValue),
       checkValid = (inputValue: string, currentValues: string[]) =>
         !currentValues.includes(inputValue) && !!inputValue && inputValue.trim() === inputValue,
       reactSelectOptions = {} as SelectProps<typeof isMulti>,
     } = schemaType.options ? schemaType.options : {}
 
     // check if reference warnings need to be generated
-    const isReferenceCreateWarning = schemaType.options && allowCreate && isReference
+    const isReferenceCreateWarning =
+      schemaType.options && allowCreate && isReference && !includeFromReference
     const isReferencePredefinedWarning =
       schemaType.options && !!schemaType.options.predefinedTags && isReference
 
@@ -81,7 +87,9 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
     useEffect(() => {
       // set generic unsubscribe function in case not used later on
       const defaultSubscription: GeneralSubscription = {
-        unsubscribe: () => {},
+        unsubscribe: () => {
+          // Default no-op unsubscribe function
+        },
       }
 
       let selectedSubscription: GeneralSubscription = defaultSubscription
@@ -104,7 +112,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         customLabel,
         customValue,
         isMulti,
-      }).subscribe((tags) => {
+      }).subscribe((tags: Tag[]) => {
         setSelected(tags)
         setLoadOption({selectedTags: false})
       })
@@ -115,7 +123,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         predefinedTags,
         customLabel,
         customValue,
-      }).subscribe((tags) => {
+      }).subscribe((tags: Tag[]) => {
         setTagOption({predefinedTags: tags})
         setLoadOption({predefinedTags: false})
       })
@@ -127,7 +135,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
           document: includeFromReference,
           customLabel,
           customValue,
-        }).subscribe((tags) => {
+        }).subscribe((tags: Tag[]) => {
           setTagOption({referenceTags: tags})
           setLoadOption({referenceTags: false})
         })
@@ -144,7 +152,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
           isMulti,
           customLabel,
           customValue,
-        }).subscribe((tags) => {
+        }).subscribe((tags: Tag[]) => {
           setTagOption({relatedTags: tags})
           setLoadOption({relatedTags: false})
         })
@@ -159,31 +167,46 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         relatedSubscription.unsubscribe()
         referenceSubscription.unsubscribe()
       }
-    }, [])
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-    // when new options are created, use this to handle it
-    const handleCreate = React.useCallback(
-      async (inputValue: string) => {
-        // since an await is used, briefly set the load state to true
-        setLoadOption({handleCreate: true})
-
-        // prepare the tag based on the option onCreate
-        const newCreateValue = await prepareTags({
+    // create a reference document and return the reference
+    const createReferenceDocumentWithOptions = useCallback(
+      (inputValue: string, refSchemaType: string) => {
+        const refSchema = schema.get(refSchemaType)
+        return createReferenceDocument({
           client,
+          inputValue,
+          refSchemaType,
           customLabel,
           customValue,
-          tags: await onCreate(inputValue),
+          onCreateReference,
+          schema: refSchema,
+        })
+      },
+      [client, onCreateReference, customLabel, customValue, schema]
+    )
+
+    // refresh reference options after creating a new document
+    const refreshReferenceOptions = useCallback(() => {
+      if (typeof includeFromReference === 'string') {
+        setLoadOption({referenceTags: true})
+
+        const referenceSubscription = getTagsFromReference({
+          client,
+          document: includeFromReference,
+          customLabel,
+          customValue,
+        }).subscribe((tags: Tag[]) => {
+          setTagOption({referenceTags: tags})
+          setLoadOption({referenceTags: false})
         })
 
-        // now that the option is created, pass to the handleChange function
-        if (Array.isArray(selected)) handleChange([...selected, newCreateValue] as RefinedTags)
-        else handleChange(newCreateValue)
-
-        // unset the load state
-        setLoadOption({handleCreate: false})
-      },
-      [onChange, selected]
-    )
+        // Clean up subscription after a short delay to allow for the update
+        setTimeout(() => {
+          referenceSubscription.unsubscribe()
+        }, 1000)
+      }
+    }, [client, includeFromReference, customLabel, customValue, setLoadOption, setTagOption])
 
     // handle any change made to the select
     const handleChange = useCallback(
@@ -203,7 +226,71 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         // save the values
         onChange(tagsForEvent ? set(tagsForEvent) : unset(tagsForEvent))
       },
-      [onChange]
+      [onChange, customLabel, customValue, isMulti, isReference]
+    )
+
+    // when new options are created, use this to handle it
+    const handleCreate = React.useCallback(
+      async (inputValue: string) => {
+        // since an await is used, briefly set the load state to true
+        setLoadOption({handleCreate: true})
+
+        try {
+          let newCreateValue: RefinedTags
+
+          // Check if we need to create a reference document
+          // This works for both actual reference fields AND tag fields with includeFromReference
+          if (includeFromReference && typeof includeFromReference === 'string') {
+            // Create a reference document
+            const createdDoc = await createReferenceDocumentWithOptions(
+              inputValue,
+              includeFromReference
+            )
+
+            // For tag fields, convert the document to a tag object
+            // For reference fields, prepareTags will handle the reference conversion
+            if (isReference) {
+              // For reference fields, prepare as reference
+              newCreateValue = await prepareTags({
+                client,
+                customLabel,
+                customValue,
+                tags: {
+                  _ref: createdDoc._id,
+                  _type: 'reference',
+                },
+              })
+            } else {
+              // Convert document to tag object for tag fields
+              newCreateValue = convertDocumentToTag(createdDoc, customLabel, customValue)
+            }
+
+            // Refresh the reference options to include the newly created document
+            refreshReferenceOptions()
+          } else {
+            // Standard tag creation
+            const newTag = await onCreate(inputValue)
+
+            // Prepare the tag for react-select
+            newCreateValue = await prepareTags({
+              client,
+              customLabel,
+              customValue,
+              tags: newTag,
+            })
+          }
+
+          if (Array.isArray(selected)) handleChange([...selected, newCreateValue] as RefinedTags)
+          else handleChange(newCreateValue)
+        } catch (error) {
+          console.error('Failed to create tag:', error)
+          // You might want to show a toast notification here
+        } finally {
+          // unset the load state
+          setLoadOption({handleCreate: false})
+        }
+      },
+      [onChange, selected]
     )
 
     // set up the options for react-select
@@ -262,12 +349,10 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       <>
         {isReferenceCreateWarning && <ReferenceCreateWarning />}
         {isReferencePredefinedWarning && <ReferencePredefinedWarning />}
-        {allowCreate && !isReference ? (
-          <CreatableSelect {...selectOptions} />
-        ) : (
-          <Select {...selectOptions} />
-        )}
+        {allowCreate ? <CreatableSelect {...selectOptions} /> : <Select {...selectOptions} />}
       </>
     )
   }
 )
+
+TagsInput.displayName = 'TagsInput'

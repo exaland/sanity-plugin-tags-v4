@@ -47,6 +47,7 @@ export interface InputOptions {
   customValue?: string
   allowCreate?: boolean
   onCreate?: (inputValue: string) => GeneralTag | Promise<GeneralTag>
+  onCreateReference?: (inputValue: string, schemaType: string) => GeneralTag | Promise<GeneralTag>
   checkValid?: (inputValue: string, currentValues: string[]) => boolean
   reactSelectOptions?: Props<Tag, boolean, GroupBase<Tag>>
 }

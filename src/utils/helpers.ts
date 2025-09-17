@@ -1,4 +1,4 @@
-import {InputType, Tag} from '../types'
+import {GeneralTag, InputType, Tag} from '../types'
 
 /**
  *
@@ -126,4 +126,19 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
     value.constructor === Object &&
     Object.prototype.toString.call(value) === '[object Object]'
   )
+}
+
+/**
+ * Creates a default onCreateReference function that handles slug fields properly
+ * @param customLabel The custom label field name
+ * @param customValue The custom value field name
+ * @returns A function that creates document data with proper slug handling
+ */
+export const createDefaultOnCreateReference = (customLabel: string, customValue: string) => {
+  return async (inputValue: string, refSchemaType: string): Promise<GeneralTag> => {
+    const tag: GeneralTag = {}
+    setAtPath(tag, customLabel, inputValue)
+    setAtPath(tag, customValue, inputValue)
+    return tag
+  }
 }
