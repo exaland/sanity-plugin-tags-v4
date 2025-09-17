@@ -17,7 +17,7 @@ jobs:
           node-version: '18.x'
           registry-url: 'https://registry.npmjs.org'
       - name: Install Node.js Dependencies
-        run: npm ci
+        run: npm install
       - name: Version NPM Package
         run: "npm version ${{ github.event.release.tag_name }} -m 'chore(release): :bookmark: Updated Package Version to ${{ github.event.release.tag_name }} [skip-ci]'"
       - run: git push origin HEAD:main
