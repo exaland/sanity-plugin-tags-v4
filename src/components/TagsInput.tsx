@@ -78,6 +78,9 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       reactSelectOptions = {} as SelectProps<typeof isMulti>,
     } = schemaType.options ? schemaType.options : {}
 
+    // Track if global sync is running to avoid conflicts
+    const [isGlobalSyncRunning, setIsGlobalSyncRunning] = React.useState(false)
+
     // check if reference warnings need to be generated
     const isReferenceCreateWarning =
       schemaType.options && allowCreate && isReference && !includeFromReference
@@ -94,6 +97,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
 
       if (!fieldPath) return
 
+      setIsGlobalSyncRunning(true)
       syncReferencesAcrossStudio({
         client,
         field: fieldPath,
@@ -103,12 +107,14 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         isMulti,
         customLabel,
         customValue,
+      }).finally(() => {
+        setIsGlobalSyncRunning(false)
       })
       // intentionally no deps aside from the toggles to avoid reruns
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [includeFromReference])
-    // check for and remove deleted references
-    const checkAndRemoveDeletedReferences = useCallback(
+    // check for and handle deleted references and value updates
+    const checkAndSyncReferences = useCallback(
       (currentSelected: Tag[], availableReferences: Tag[]) => {
         if (!includeFromReference) {
           return currentSelected
@@ -116,16 +122,42 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
 
         const availableIds = new Set(availableReferences.map((tag) => tag._id))
 
-        const validSelected = currentSelected.filter((tag) => {
-          const isDeleted = tag._id && !availableIds.has(tag._id)
+        // Build lookup for value updates
+        const referenceLookup = Object.fromEntries(
+          availableReferences.map((reference) => [
+            reference._id,
+            {label: reference.label, value: reference.value},
+          ])
+        )
 
-          return !isDeleted
-        })
+        const processedSelected = currentSelected
+          .map((tag) => {
+            // Remove deleted references
+            if (tag._id && !availableIds.has(tag._id)) {
+              return null // Will be filtered out
+            }
 
-        if (validSelected.length === currentSelected.length) {
-        }
+            // Update values for existing references
+            if (tag._id && referenceLookup[tag._id]) {
+              const refData = referenceLookup[tag._id]
+              const needsUpdate = refData.label !== tag.label || refData.value !== tag.value
 
-        return validSelected
+              if (needsUpdate) {
+                return {
+                  ...tag,
+                  label: refData.label,
+                  value: refData.value,
+                  _labelTemp: refData.label,
+                  _valueTemp: refData.value,
+                }
+              }
+            }
+
+            return tag
+          })
+          .filter(Boolean) as Tag[]
+
+        return processedSelected
       },
       [includeFromReference]
     )
@@ -152,18 +184,27 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         : ''
     }, [groupOptions.referenceTags])
 
-    const runDeletedReferenceCleanup = useCallback(() => {
+    const runReferenceSync = useCallback(() => {
       if (!includeFromReference) return
 
       const selectedArr = Array.isArray(selected) ? selected : []
       const referenceArr = groupOptions.referenceTags || []
       if (!selectedArr.length || !referenceArr.length) return
 
-      const cleanedSelected = checkAndRemoveDeletedReferences(selectedArr, referenceArr)
-      if (cleanedSelected.length !== selectedArr.length) {
-        setSelected(cleanedSelected)
+      const syncedSelected = checkAndSyncReferences(selectedArr, referenceArr)
+
+      // Check if anything changed (length or content)
+      const hasChanges =
+        syncedSelected.length !== selectedArr.length ||
+        syncedSelected.some((tag, index) => {
+          const original = selectedArr[index]
+          return !original || tag.label !== original.label || tag.value !== original.value
+        })
+
+      if (hasChanges) {
+        setSelected(syncedSelected)
       }
-    }, [selectedIdsKey, referenceIdsKey])
+    }, [selectedIdsKey, referenceIdsKey, checkAndSyncReferences])
 
     const isDeletedReference = useCallback(
       (tag: Tag, availableReferences: Tag[]) => {
@@ -174,10 +215,13 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       [includeFromReference]
     )
 
-    // Run deleted reference cleanup whenever selected/reference IDs change
+    // Run reference sync whenever selected/reference IDs change
+    // But only if we're not already running global sync
     useEffect(() => {
-      runDeletedReferenceCleanup()
-    }, [])
+      if (!isGlobalSyncRunning) {
+        runReferenceSync()
+      }
+    }, [runReferenceSync, isGlobalSyncRunning])
 
     // get all tag types when the component loads
     useEffect(() => {
@@ -203,37 +247,33 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       let selectedRef: Tag[] = []
       let referenceRef: Tag[] = []
 
-      // Auto-remove deleted references once both lists are present
-      const maybeCleanupDeletedReferences = () => {
+      // Auto-sync references once both lists are present
+      const maybeSyncReferences = () => {
         if (typeof includeFromReference !== 'string') return
         if (!selectedRef.length || !referenceRef.length) return
 
-        const refIds = new Set(referenceRef.map((t) => t._id).filter(Boolean))
-        const cleaned = selectedRef.filter((t) => !t._id || refIds.has(t._id))
+        const synced = checkAndSyncReferences(selectedRef, referenceRef)
 
-        // Only update if IDs changed
-        const prevKey = selectedRef
-          .map((t) => t?._id)
-          .filter(Boolean)
-          .sort()
-          .join(',')
-        const nextKey = cleaned
-          .map((t) => t?._id)
-          .filter(Boolean)
-          .sort()
-          .join(',')
-        if (nextKey === prevKey) return
+        // Check if anything changed
+        const hasChanges =
+          synced.length !== selectedRef.length ||
+          synced.some((tag, index) => {
+            const original = selectedRef[index]
+            return !original || tag.label !== original.label || tag.value !== original.value
+          })
 
-        setSelected(cleaned as RefinedTags)
+        if (hasChanges) {
+          setSelected(synced as RefinedTags)
 
-        const tagsForEvent = revertTags({
-          tags: cleaned as RefinedTags,
-          customLabel,
-          customValue,
-          isMulti,
-          isReference,
-        })
-        onChange(tagsForEvent ? set(tagsForEvent) : unset(tagsForEvent))
+          const tagsForEvent = revertTags({
+            tags: synced as RefinedTags,
+            customLabel,
+            customValue,
+            isMulti,
+            isReference,
+          })
+          onChange(tagsForEvent ? set(tagsForEvent) : unset(tagsForEvent))
+        }
       }
 
       // setup the selected observable
@@ -252,7 +292,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         } else {
           selectedRef = []
         }
-        maybeCleanupDeletedReferences()
+        maybeSyncReferences()
         setLoadOption({selectedTags: false})
       })
 
@@ -281,6 +321,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
             ? (props as any).path.filter(Boolean).join('.')
             : (schemaType?.name as string)
           if (fieldPath) {
+            setIsGlobalSyncRunning(true)
             syncReferencesAcrossStudio({
               client,
               field: fieldPath,
@@ -290,7 +331,11 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
               isMulti,
               customLabel,
               customValue,
-            }).catch((err) => console.error('❌ Sync after reference update failed:', err))
+            })
+              .catch((err) => console.error('❌ Sync after reference update failed:', err))
+              .finally(() => {
+                setIsGlobalSyncRunning(false)
+              })
           }
           if (Array.isArray(tags)) {
             referenceRef = tags as Tag[]
@@ -299,7 +344,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
           } else {
             referenceRef = []
           }
-          maybeCleanupDeletedReferences()
+          maybeSyncReferences()
           setLoadOption({referenceTags: false})
         })
       } else {

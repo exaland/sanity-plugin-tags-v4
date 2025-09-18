@@ -442,17 +442,19 @@ export const syncReferencesAcrossStudio = async ({
     if (Array.isArray(current)) {
       // Handle array fields
       let anyChanged = false
-      const processed = current
-        .filter(isReferenceField ? filterRef : filterNonRef) // Cleanup: remove invalid items
-        .map((item) => {
-          if (!isReferenceField) {
-            // For object-based tag fields, also apply value updates
-            const {changed, next} = applyValueUpdates(item)
-            if (changed) anyChanged = true
-            return next
-          }
-          return item
+      let processed: any[]
+
+      if (isReferenceField) {
+        // For reference fields: cleanup invalid refs, then return as-is
+        processed = current.filter(filterRef)
+      } else {
+        // For object-based tag fields: only apply value updates, don't filter by values
+        processed = current.map((item) => {
+          const {changed, next} = applyValueUpdates(item)
+          if (changed) anyChanged = true
+          return next
         })
+      }
 
       if (processed.length !== current.length || anyChanged) {
         tx = tx.patch(doc._id, {set: {[field]: processed}})
@@ -460,14 +462,15 @@ export const syncReferencesAcrossStudio = async ({
       }
     } else if (current && typeof current === 'object') {
       // Handle single object fields
-      const isValid = isReferenceField ? filterRef(current) : filterNonRef(current)
-
-      if (!isValid) {
-        // Cleanup: remove invalid single items
-        tx = tx.patch(doc._id, {unset: [field]})
-        patched += 1
-      } else if (!isReferenceField) {
-        // For object-based tag fields, apply value updates
+      if (isReferenceField) {
+        // For reference fields: cleanup invalid refs
+        const isValid = filterRef(current)
+        if (!isValid) {
+          tx = tx.patch(doc._id, {unset: [field]})
+          patched += 1
+        }
+      } else {
+        // For object-based tag fields: only apply value updates
         const {changed, next} = applyValueUpdates(current)
         if (changed) {
           tx = tx.patch(doc._id, {set: {[field]: next}})
