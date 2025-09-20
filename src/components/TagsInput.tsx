@@ -159,7 +159,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         relatedSubscription.unsubscribe()
         referenceSubscription.unsubscribe()
       }
-    }, [])
+    }, [value, predefinedTags, includeFromReference, includeFromRelated, documentType, customLabel, customValue, isMulti, client])
 
     // when new options are created, use this to handle it
     const handleCreate = React.useCallback(
@@ -182,7 +182,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         // unset the load state
         setLoadOption({handleCreate: false})
       },
-      [onChange, selected]
+      [client, customLabel, customValue, onCreate, selected, handleChange]
     )
 
     // handle any change made to the select
@@ -203,7 +203,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         // save the values
         onChange(tagsForEvent ? set(tagsForEvent) : unset(tagsForEvent))
       },
-      [onChange]
+      [onChange, customLabel, customValue, isMulti, isReference]
     )
 
     // set up the options for react-select
