@@ -161,30 +161,6 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       }
     }, [value, predefinedTags, includeFromReference, includeFromRelated, documentType, customLabel, customValue, isMulti, client])
 
-    // when new options are created, use this to handle it
-    const handleCreate = React.useCallback(
-      async (inputValue: string) => {
-        // since an await is used, briefly set the load state to true
-        setLoadOption({handleCreate: true})
-
-        // prepare the tag based on the option onCreate
-        const newCreateValue = await prepareTags({
-          client,
-          customLabel,
-          customValue,
-          tags: await onCreate(inputValue),
-        })
-
-        // now that the option is created, pass to the handleChange function
-        if (Array.isArray(selected)) handleChange([...selected, newCreateValue] as RefinedTags)
-        else handleChange(newCreateValue)
-
-        // unset the load state
-        setLoadOption({handleCreate: false})
-      },
-      [client, customLabel, customValue, onCreate, selected, handleChange]
-    )
-
     // handle any change made to the select
     const handleChange = useCallback(
       (inputValue: RefinedTags) => {
@@ -206,10 +182,33 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       [onChange, customLabel, customValue, isMulti, isReference]
     )
 
+    // when new options are created, use this to handle it
+    const handleCreate = React.useCallback(
+      async (inputValue: string) => {
+        // since an await is used, briefly set the load state to true
+        setLoadOption({handleCreate: true})
+
+        // prepare the tag based on the option onCreate
+        const newCreateValue = await prepareTags({
+          client,
+          customLabel,
+          customValue,
+          tags: await onCreate(inputValue),
+        })
+
+        // now that the option is created, create the new value and call handleChange
+        const newValue = Array.isArray(selected) ? [...selected, newCreateValue] as RefinedTags : newCreateValue
+        handleChange(newValue)
+
+        // unset the load state
+        setLoadOption({handleCreate: false})
+      },
+      [client, customLabel, customValue, onCreate, selected, handleChange]
+    )
+
     // set up the options for react-select
     const selectOptions = {
       isLoading,
-      ref,
       isMulti,
       options,
       value: selected,
@@ -263,9 +262,9 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         {isReferenceCreateWarning && <ReferenceCreateWarning />}
         {isReferencePredefinedWarning && <ReferencePredefinedWarning />}
         {allowCreate && !isReference ? (
-          <CreatableSelect {...selectOptions} />
+          <CreatableSelect ref={ref} {...selectOptions} />
         ) : (
-          <Select {...selectOptions} />
+          <Select ref={ref} {...selectOptions} />
         )}
       </>
     )
