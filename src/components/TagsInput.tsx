@@ -26,12 +26,19 @@ import {
 import {ReferenceCreateWarning, ReferencePredefinedWarning} from './ReferenceWarnings'
 import styles from './TagsInput.module.css'
 
+// eslint-disable-next-line no-warning-comments
 // TODO: Allow reference creation inline
+// eslint-disable-next-line no-warning-comments
 // TODO: Allow reference merging inline (stretch ??)
+// eslint-disable-next-line no-warning-comments
 // TODO: Allow reference editing inline (stretch ??)
+// eslint-disable-next-line no-warning-comments
 // TODO: Allow reference deleting inline (stretch ??)
+// eslint-disable-next-line no-warning-comments
 // TODO: Allow object merging inline (stretch ??)
+// eslint-disable-next-line no-warning-comments
 // TODO: Allow object editing inline (stretch ??)
+// eslint-disable-next-line no-warning-comments
 // TODO: Allow object deleting inline (stretch ??)
 
 export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
@@ -82,6 +89,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
     useEffect(() => {
       // set generic unsubscribe function in case not used later on
       const defaultSubscription: GeneralSubscription = {
+        // eslint-disable-next-line no-empty-function
         unsubscribe: () => {},
       }
 
@@ -170,6 +178,8 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       includeFromReference,
       includeFromRelated,
       documentType,
+      setLoadOption,
+      setTagOption,
     ])
 
     // handle any change made to the select
