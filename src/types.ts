@@ -8,7 +8,7 @@ import {
   ReferenceSchemaType,
 } from 'sanity'
 
-export type GeneralSubscription = Subscription | {unsubscribe: () => any}
+export type GeneralSubscription = Subscription | {unsubscribe: () => void}
 
 export interface RefTag {
   _ref: string

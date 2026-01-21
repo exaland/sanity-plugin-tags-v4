@@ -35,7 +35,7 @@ interface GetGeneralObservableInput {
   client: SanityClient
   query: string
   params: {
-    [key: string]: any
+    [key: string]: unknown
   }
   customLabel?: string
   customValue?: string
