@@ -1,6 +1,6 @@
 {
   "name": "sanity-plugin-tags-v4",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A multi-tag input for Sanity Studio",
   "keywords": [
     "sanity",
@@ -51,29 +51,29 @@
   "devDependencies": {
     "@sanity/pkg-utils": "^2.2.13",
     "@sanity/plugin-kit": "^3.1.6",
-    "@types/react": "^18.0.28",
-    "@typescript-eslint/eslint-plugin": "^5.52.0",
-    "@typescript-eslint/parser": "^5.52.0",
-    "eslint": "^8.34.0",
-    "eslint-config-prettier": "^8.6.0",
-    "eslint-config-sanity": "^6.0.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-react": "^7.32.2",
+    "@types/react": "^19.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-sanity": "^7.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.8.4",
+    "prettier": "^3.0.0",
     "prettier-plugin-packagejson": "^2.4.3",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-is": "^19.1.0",
+    "react": "^19.0",
+    "react-dom": "^19.0",
+    "react-is": "^19.0",
     "rimraf": "^4.1.2",
     "rollup-plugin-postcss": "^4.0.2",
-    "typescript": "^4.9.5"
+    "typescript": "^5.2.0"
   },
   "peerDependencies": {
     "react": "^19",
     "rxjs": "^7.8.0",
-    "sanity": "^4.6.0",
+    "sanity": "^5.5.0",
     "styled-components": "^6.1.18"
   },
   "engines": {
