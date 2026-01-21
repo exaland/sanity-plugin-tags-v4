@@ -1,4 +1,5 @@
 import {SchemaTypeDefinition} from 'sanity'
+
 import {TagsInput} from '../components/TagsInput'
 
 export const tagSchema: SchemaTypeDefinition = {

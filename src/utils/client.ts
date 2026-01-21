@@ -1,5 +1,5 @@
-import {useClient as useSanityClient} from 'sanity'
 import {ListenOptions, SanityClient} from '@sanity/client'
+import {useClient as useSanityClient} from 'sanity'
 
 /**
  * Default listen options to be used with the `listen` method provided by the sanity client

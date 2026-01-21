@@ -1,4 +1,5 @@
 import React from 'react'
+
 import {Tag} from '../types'
 import {filterUniqueTags} from './helpers'
 

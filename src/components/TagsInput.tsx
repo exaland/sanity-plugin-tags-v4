@@ -1,9 +1,10 @@
+import {usePrefersDark} from '@sanity/ui'
 import React, {forwardRef, useCallback, useEffect} from 'react'
 import Select from 'react-select'
 import CreatableSelect from 'react-select/creatable'
 import StateManagedSelect from 'react-select/dist/declarations/src/stateManager'
 import {set, unset, useFormValue} from 'sanity'
-import {usePrefersDark} from '@sanity/ui'
+
 import {
   GeneralSubscription,
   GeneralTag,
@@ -159,31 +160,17 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         relatedSubscription.unsubscribe()
         referenceSubscription.unsubscribe()
       }
-    }, [])
-
-    // when new options are created, use this to handle it
-    const handleCreate = React.useCallback(
-      async (inputValue: string) => {
-        // since an await is used, briefly set the load state to true
-        setLoadOption({handleCreate: true})
-
-        // prepare the tag based on the option onCreate
-        const newCreateValue = await prepareTags({
-          client,
-          customLabel,
-          customValue,
-          tags: await onCreate(inputValue),
-        })
-
-        // now that the option is created, pass to the handleChange function
-        if (Array.isArray(selected)) handleChange([...selected, newCreateValue] as RefinedTags)
-        else handleChange(newCreateValue)
-
-        // unset the load state
-        setLoadOption({handleCreate: false})
-      },
-      [onChange, selected]
-    )
+    }, [
+      client,
+      value,
+      customLabel,
+      customValue,
+      isMulti,
+      predefinedTags,
+      includeFromReference,
+      includeFromRelated,
+      documentType,
+    ])
 
     // handle any change made to the select
     const handleChange = useCallback(
@@ -203,7 +190,34 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         // save the values
         onChange(tagsForEvent ? set(tagsForEvent) : unset(tagsForEvent))
       },
-      [onChange]
+      [onChange, customLabel, customValue, isMulti, isReference],
+    )
+
+    // when new options are created, use this to handle it
+    const handleCreate = React.useCallback(
+      async (inputValue: string) => {
+        // since an await is used, briefly set the load state to true
+        setLoadOption({handleCreate: true})
+
+        // prepare the tag based on the option onCreate
+        const newCreateValue = await prepareTags({
+          client,
+          customLabel,
+          customValue,
+          tags: await onCreate(inputValue),
+        })
+
+        // now that the option is created, pass to the handleChange function
+        if (Array.isArray(selected)) {
+          handleChange([...selected, newCreateValue] as RefinedTags)
+        } else {
+          handleChange(newCreateValue)
+        }
+
+        // unset the load state
+        setLoadOption({handleCreate: false})
+      },
+      [client, customLabel, customValue, onCreate, selected, handleChange, setLoadOption],
     )
 
     // set up the options for react-select
@@ -269,5 +283,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
         )}
       </>
     )
-  }
+  },
 )
+
+TagsInput.displayName = 'TagsInput'

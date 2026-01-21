@@ -1,6 +1,6 @@
-# sanity-v4-plugin-tags
+# sanity-plugin-tags-v4
 
-> This is a **Sanity Studio v4** plugin.
+> This is a **Sanity Studio v5** plugin with **React 19** support.
 
 A multi-tag input for sanity studio. Fully featured with autocomplete capabilities, live updates, predefined tag options, style and component customizability, and much more.
 
@@ -8,8 +8,8 @@ A multi-tag input for sanity studio. Fully featured with autocomplete capabiliti
 
 ## Install
 
-
-Sanity v4: `npm install sanity-plugin-tags-v4`
+Sanity v5 (React 19): `npm install sanity-plugin-tags-v4`
+Sanity v4: `npm install sanity-plugin-tags-v3`
 Sanity v3: `npm install sanity-plugin-tags`  
 Sanity v2: `sanity install tags`
 
@@ -258,7 +258,27 @@ If you want to override React Select's components see [Parts](#parts) for more i
 
 ## Develop & test
 
-## Contribute
+## Requirements
+
+- **Node.js**: >= 18
+- **Sanity Studio**: >= v5.5.0
+- **React**: >= 19.0
+- **React DOM**: >= 19.0
+
+## Compatibility
+
+This plugin is fully compatible with:
+- **Sanity Studio v5** with all its latest features
+- **React 19** including the new improvements and hook optimizations
+- **TypeScript 5.2+** for better type safety
+
+## React 19 Features
+
+This plugin takes advantage of React 19 improvements:
+- Enhanced hook dependency tracking
+- Improved re-render optimization
+- Better error boundaries
+- Modern async component patterns via observables
 
 I love feedback, and any help is appreciated! Feel free to install the plugin, submit an issue, or open a PR.
 

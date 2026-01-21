@@ -1,6 +1,6 @@
 {
   "name": "sanity-plugin-tags-v4",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A multi-tag input for Sanity Studio",
   "keywords": [
     "sanity",
@@ -71,10 +71,11 @@
     "typescript": "^5.2.0"
   },
   "peerDependencies": {
-    "react": "^19",
+    "react": "^19.0",
+    "react-dom": "^19.0",
     "rxjs": "^7.8.0",
     "sanity": "^5.5.0",
-    "styled-components": "^6.1.18"
+    "styled-components": "^6.1.0"
   },
   "engines": {
     "node": ">=14"
@@ -85,12 +86,12 @@
     "Leo Baker-Hytch <l.bakerhytch@gmail.com>"
   ],
   "overrides": {
-  "esbuild": "0.25.9"
-},
+    "esbuild": "0.25.9"
+  },
   "sanityPlugin": {
-   "verifyPackage": {
+    "verifyPackage": {
       "tsc": false
-   }
+    }
   },
   "sanityExchangeUrl": "https://www.sanity.io/plugins/tags"
 }

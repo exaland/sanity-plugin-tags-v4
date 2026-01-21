@@ -45,11 +45,11 @@ export const filterUniqueTags = (tags: Tag[] = []): Tag[] => {
  * @param defaultValue A value to return
  * @returns The value at the end of the path or a default value
  */
-export const get = <DefaultValue extends unknown>(
+export const get = <DefaultValue = undefined>(
   object: Record<string, unknown> | unknown,
   path: string | string[],
-  defaultValue?: DefaultValue
-): any => {
+  defaultValue?: DefaultValue,
+): unknown => {
   if (!object) return defaultValue
 
   let props: string[] | boolean = false
@@ -89,10 +89,10 @@ function prototypeCheck(prop: string) {
  * @param value The value to add to the object
  * @returns True or false defining whether it is sucessfully added
  */
-export const setAtPath = <Value extends unknown>(
+export const setAtPath = <Value = unknown>(
   object: Record<string, unknown>,
   path: string | string[],
-  value: Value
+  value: Value,
 ): boolean => {
   let props: string[] | boolean = false
 

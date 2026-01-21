@@ -1,4 +1,5 @@
 import {SanityClient} from '@sanity/client'
+
 import {GeneralTag, RefinedTags, RefTag, Tag, UnrefinedTags} from '../types'
 import {get, isPlainObject, setAtPath} from './helpers'
 
@@ -42,13 +43,13 @@ interface RevertTagInput<IsReference extends boolean = boolean> {
  * @returns a formatted tag that restores any custom labels or values while also preparing the tag to be saved by sanity
  */
 function revertTag<IsReference extends true>(
-  params: RevertTagInput<IsReference>
+  params: RevertTagInput<IsReference>,
 ): (tag: Tag) => RefTag
 function revertTag<IsReference extends false>(
-  params: RevertTagInput<IsReference>
+  params: RevertTagInput<IsReference>,
 ): (tag: Tag) => GeneralTag
 function revertTag<IsReference extends boolean>(
-  params: RevertTagInput<IsReference>
+  params: RevertTagInput<IsReference>,
 ): (tag: Tag) => RefTag | GeneralTag
 function revertTag<IsReference extends boolean>({
   customLabel = 'label',
@@ -136,7 +137,7 @@ export const prepareTags = async <TagType extends UnrefinedTags>({
  * @returns A prepared list of tags that preserves any custom labels or values
  */
 export const prepareTagsAsList = async <TagType extends UnrefinedTags>(
-  preparedTagsOptions: PrepareTagsInput<TagType>
+  preparedTagsOptions: PrepareTagsInput<TagType>,
 ): Promise<Tag[]> => {
   const preparedTags = await prepareTags(preparedTagsOptions)
 
@@ -147,7 +148,7 @@ export const prepareTagsAsList = async <TagType extends UnrefinedTags>(
 
 interface RevertTagsInput<
   IsReference extends boolean = boolean,
-  IsMulti extends boolean = boolean
+  IsMulti extends boolean = boolean,
 > {
   tags: RefinedTags
   customLabel?: string
@@ -164,31 +165,31 @@ interface RevertTagsInput<
  * @returns a formatted list of tag(s) that restores any custom labels or values while also preparing the tag(s) to be saved by sanity
  */
 export function revertTags<IsReference extends true, IsMulti extends true>(
-  params: RevertTagsInput<IsReference, IsMulti>
+  params: RevertTagsInput<IsReference, IsMulti>,
 ): RefTag[]
 export function revertTags<IsReference extends true, IsMulti extends false>(
-  params: RevertTagsInput<IsReference, IsMulti>
+  params: RevertTagsInput<IsReference, IsMulti>,
 ): RefTag | undefined
 export function revertTags<IsReference extends false, IsMulti extends true>(
-  params: RevertTagsInput<IsReference, IsMulti>
+  params: RevertTagsInput<IsReference, IsMulti>,
 ): GeneralTag[]
 export function revertTags<IsReference extends false, IsMulti extends false>(
-  params: RevertTagsInput<IsReference, IsMulti>
+  params: RevertTagsInput<IsReference, IsMulti>,
 ): GeneralTag | undefined
 export function revertTags<IsReference extends boolean, IsMulti extends false>(
-  params: RevertTagsInput<IsReference, IsMulti>
+  params: RevertTagsInput<IsReference, IsMulti>,
 ): RefTag | GeneralTag | undefined
 export function revertTags<IsReference extends boolean, IsMulti extends true>(
-  params: RevertTagsInput<IsReference, IsMulti>
+  params: RevertTagsInput<IsReference, IsMulti>,
 ): RefTag[] | GeneralTag[]
 export function revertTags<IsReference extends false, IsMulti extends boolean>(
-  params: RevertTagsInput<IsReference, IsMulti>
+  params: RevertTagsInput<IsReference, IsMulti>,
 ): GeneralTag | GeneralTag[] | undefined
 export function revertTags<IsReference extends true, IsMulti extends boolean>(
-  params: RevertTagsInput<IsReference, IsMulti>
+  params: RevertTagsInput<IsReference, IsMulti>,
 ): RefTag | RefTag[] | undefined
 export function revertTags<IsReference extends boolean, IsMulti extends boolean>(
-  params: RevertTagsInput<IsReference, IsMulti>
+  params: RevertTagsInput<IsReference, IsMulti>,
 ): UnrefinedTags
 export function revertTags<IsReference extends boolean, IsMulti extends boolean>({
   tags,
