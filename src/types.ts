@@ -1,3 +1,5 @@
+import {GroupBase, Props, SelectComponentsConfig} from 'react-select'
+import {Subscription} from 'rxjs'
 import {
   ArrayOfObjectsInputProps,
   ArraySchemaType,
@@ -5,8 +7,6 @@ import {
   ObjectSchemaType,
   ReferenceSchemaType,
 } from 'sanity'
-import {GroupBase, Props, SelectComponentsConfig} from 'react-select'
-import {Subscription} from 'rxjs'
 
 export type GeneralSubscription = Subscription | {unsubscribe: () => any}
 
@@ -16,7 +16,7 @@ export interface RefTag {
 }
 
 export interface GeneralTag {
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface Tag {
@@ -24,7 +24,7 @@ export interface Tag {
   _key: string
   label: string
   value: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export type UnrefinedTags = RefTag | GeneralTag | RefTag[] | GeneralTag[] | undefined

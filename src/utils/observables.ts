@@ -1,7 +1,8 @@
 import {SanityClient} from '@sanity/client'
-import {from, defer, pipe, Observable} from 'rxjs'
+import {defer, from, Observable, pipe} from 'rxjs'
 import {map, switchMap} from 'rxjs/operators'
-import {GeneralTag, RefTag, PredefinedTags, Tag, UnrefinedTags} from '../types'
+
+import {GeneralTag, PredefinedTags, RefTag, Tag, UnrefinedTags} from '../types'
 import {listenOptions} from './client'
 import {filterUniqueTags} from './helpers'
 import {prepareTagsAsList} from './mutators'
@@ -27,7 +28,7 @@ const refineTagsPipe = ({
   pipe(
     map((val) => (Array.isArray(val) ? val.flat(Infinity) : val) as UnrefinedTags),
     switchMap((val) => prepareTagsAsList({client, tags: val, customLabel, customValue})),
-    map((val) => filterUniqueTags(val))
+    map((val) => filterUniqueTags(val)),
   )
 
 interface GetGeneralObservableInput {
@@ -58,7 +59,7 @@ const getGeneralObservable = ({
 }: GetGeneralObservableInput) => {
   return client.listen<NonNullable<UnrefinedTags>>(query, params, listenOptions).pipe(
     switchMap(() => client.fetch<UnrefinedTags>(query, params)),
-    refineTagsPipe({client, customLabel, customValue})
+    refineTagsPipe({client, customLabel, customValue}),
   )
 }
 
@@ -79,13 +80,13 @@ interface GetSelectedTagsInput<IsMulti extends boolean = boolean> {
  * @returns An observable that returns pre-refined tags received from the predefined tags option
  */
 export function getSelectedTags<IsMulti extends true>(
-  params: GetSelectedTagsInput<IsMulti>
+  params: GetSelectedTagsInput<IsMulti>,
 ): Observable<Tag[]>
 export function getSelectedTags<IsMulti extends false>(
-  params: GetSelectedTagsInput<IsMulti>
+  params: GetSelectedTagsInput<IsMulti>,
 ): Observable<Tag>
 export function getSelectedTags<IsMulti extends boolean>(
-  params: GetSelectedTagsInput<IsMulti>
+  params: GetSelectedTagsInput<IsMulti>,
 ): Observable<Tag | Tag[]>
 export function getSelectedTags<IsMulti extends boolean>({
   client,
@@ -97,7 +98,7 @@ export function getSelectedTags<IsMulti extends boolean>({
   const tagFunction = async () => tags
   return defer(() => from(tagFunction())).pipe(
     refineTagsPipe({client, customLabel, customValue}),
-    map((val) => (isMulti ? val : val[0]))
+    map((val) => (isMulti ? val : val[0])),
   )
 }
 
@@ -109,7 +110,7 @@ export function getSelectedTags<IsMulti extends boolean>({
 const predefinedTagWrapper = async (
   predefinedTags:
     | (() => Promise<GeneralTag | GeneralTag[] | RefTag | RefTag[]>)
-    | (() => GeneralTag | GeneralTag[] | RefTag | RefTag[])
+    | (() => GeneralTag | GeneralTag[] | RefTag | RefTag[]),
 ): Promise<GeneralTag[] | RefTag[]> => {
   const tags = await predefinedTags()
   if (!Array.isArray(tags)) return [tags]
@@ -141,7 +142,9 @@ export const getPredefinedTags = ({
     predefinedTags instanceof Function ? predefinedTags : async () => predefinedTags
 
   return defer(() =>
-    from(predefinedTagWrapper(tagFunction)).pipe(refineTagsPipe({client, customLabel, customValue}))
+    from(predefinedTagWrapper(tagFunction)).pipe(
+      refineTagsPipe({client, customLabel, customValue}),
+    ),
   )
 }
 
