@@ -110,18 +110,39 @@ export const prepareTags = async <TagType extends UnrefinedTags>({
   // undefined array
   if (Array.isArray(tags) && !tags.length) return []
 
+  // normalize primitive arrays (e.g. ['GRS', 'ABC'])
+  if (Array.isArray(tags) && tags.length && !isPlainObject(tags[0])) {
+    const normalized = tags.map((tag) => {
+      const value = String(tag)
+      const tempTag: GeneralTag = {label: value, value}
+      setAtPath(tempTag, customLabel, value)
+      setAtPath(tempTag, customValue, value)
+      return tempTag
+    })
+
+    return normalized.map(prepare)
+  }
+
   // reference array
-  if (Array.isArray(tags) && '_ref' in tags[0] && '_type' in tags[0])
-    if ('_ref' in tags[0] && '_type' in tags[0]) {
-      return (
-        await client.fetch('*[_id in $refs]', {
-          refs: tags.map((tag) => tag._ref),
-        })
-      ).map(prepare)
-    }
+  if (Array.isArray(tags) && isPlainObject(tags[0]) && '_ref' in tags[0] && '_type' in tags[0]) {
+    return (
+      await client.fetch('*[_id in $refs]', {
+        refs: tags.map((tag) => (tag as RefTag)._ref),
+      })
+    ).map(prepare)
+  }
 
   // object array
   if (Array.isArray(tags)) return tags.map(prepare)
+
+  // normalize primitive singleton (e.g. 'GRS')
+  if (!isPlainObject(tags)) {
+    const value = String(tags)
+    const tempTag: GeneralTag = {label: value, value}
+    setAtPath(tempTag, customLabel, value)
+    setAtPath(tempTag, customValue, value)
+    return prepare(tempTag)
+  }
 
   // reference singleton
   if (isPlainObject(tags) && '_ref' in tags && '_type' in tags)
