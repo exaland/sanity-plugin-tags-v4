@@ -63,7 +63,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
 
     // define all options passed to input
     const {
-      predefinedTags = [],
+      predefinedTags = undefined,
       includeFromReference = false,
       includeFromRelated = false,
       customLabel = 'label',
