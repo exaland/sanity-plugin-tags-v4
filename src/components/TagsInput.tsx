@@ -122,7 +122,10 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       })
 
       // setup the predefined observable
-      if (resolvedPredefinedTags !== undefined) {
+      if (resolvedPredefinedTags === undefined) {
+        setTagOption({predefinedTags: []})
+        setLoadOption({predefinedTags: false})
+      } else {
         predefinedSubscription = getPredefinedTags({
           client,
           predefinedTags: resolvedPredefinedTags,
@@ -132,9 +135,6 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
           setTagOption({predefinedTags: tags})
           setLoadOption({predefinedTags: false})
         })
-      } else {
-        setTagOption({predefinedTags: []})
-        setLoadOption({predefinedTags: false})
       }
 
       // if true, setup the reference observable
