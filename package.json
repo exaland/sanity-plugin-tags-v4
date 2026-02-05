@@ -1,6 +1,6 @@
 {
   "name": "sanity-plugin-tags-v4",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A multi-tag input for Sanity Studio",
   "keywords": [
     "sanity",
@@ -41,7 +41,8 @@
     "format": "prettier --write --cache --ignore-unknown .",
     "link-watch": "plugin-kit link-watch",
     "lint": "eslint .",
-    "watch": "pkg-utils watch --strict"
+    "watch": "pkg-utils watch --strict",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@sanity/incompatible-plugin": "^1.0.4",
@@ -49,10 +50,10 @@
   },
   "devDependencies": {
     "@sanity/pkg-utils": "^2.2.13",
-    "@sanity/plugin-kit": "^3.1.6",
+    "@sanity/plugin-kit": "^4.0.20",
     "@types/react": "^19.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
     "eslint": "^8.50.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-config-sanity": "^7.0.0",
@@ -77,7 +78,7 @@
     "styled-components": "^6.1.0"
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "authors": [
     "Alexandre Magnier | Exaland Concept <exaland@gmail.com>",
@@ -89,7 +90,8 @@
   },
   "sanityPlugin": {
     "verifyPackage": {
-      "tsc": false
+      "tsc": false,
+      "scripts": false
     }
   },
   "sanityExchangeUrl": "https://www.sanity.io/plugins/tags"

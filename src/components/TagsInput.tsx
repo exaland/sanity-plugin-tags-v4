@@ -80,10 +80,13 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       reactSelectOptions = {} as SelectProps<typeof isMulti>,
     } = schemaType.options ? schemaType.options : {}
 
+    const resolvedPredefinedTags =
+      Array.isArray(predefinedTags) && !predefinedTags.length ? undefined : predefinedTags
+
     // check if reference warnings need to be generated
     const isReferenceCreateWarning = schemaType.options && allowCreate && isReference
     const isReferencePredefinedWarning =
-      schemaType.options && !!schemaType.options.predefinedTags && isReference
+      schemaType.options && !!resolvedPredefinedTags && isReference
 
     // get all tag types when the component loads
     useEffect(() => {
@@ -119,15 +122,20 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       })
 
       // setup the predefined observable
-      predefinedSubscription = getPredefinedTags({
-        client,
-        predefinedTags,
-        customLabel,
-        customValue,
-      }).subscribe((tags) => {
-        setTagOption({predefinedTags: tags})
+      if (resolvedPredefinedTags !== undefined) {
+        predefinedSubscription = getPredefinedTags({
+          client,
+          predefinedTags: resolvedPredefinedTags,
+          customLabel,
+          customValue,
+        }).subscribe((tags) => {
+          setTagOption({predefinedTags: tags})
+          setLoadOption({predefinedTags: false})
+        })
+      } else {
+        setTagOption({predefinedTags: []})
         setLoadOption({predefinedTags: false})
-      })
+      }
 
       // if true, setup the reference observable
       if (typeof includeFromReference === 'string') {
@@ -174,7 +182,7 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       customLabel,
       customValue,
       isMulti,
-      predefinedTags,
+      resolvedPredefinedTags,
       includeFromReference,
       includeFromRelated,
       documentType,
