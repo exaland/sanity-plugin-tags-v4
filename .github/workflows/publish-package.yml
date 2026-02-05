@@ -7,14 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Git Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - run: |
           git config user.name exaland
           git config user.email exaland@gmail.com
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18.x'
+          node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
       - name: Install Node.js Dependencies
         run: npm install
