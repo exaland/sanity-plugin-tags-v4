@@ -20,8 +20,8 @@ const prepareTag = ({customLabel = 'label', customValue = 'value'}: PrepareTagIn
     const valueValue = get(tag, customValue)
     const labelSource = labelValue ?? tag.label
     const valueSource = valueValue ?? tag.value
-    const label = labelSource == null ? '' : String(labelSource)
-    const value = valueSource == null ? '' : String(valueSource)
+    const label = labelSource === null ? '' : String(labelSource)
+    const value = valueSource === null ? '' : String(valueSource)
     const tempTag: Tag = {
       ...tag,
       _type: 'tag',
