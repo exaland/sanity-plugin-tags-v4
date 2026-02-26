@@ -16,14 +16,20 @@ interface PrepareTagInput {
  */
 const prepareTag = ({customLabel = 'label', customValue = 'value'}: PrepareTagInput) => {
   return (tag: GeneralTag) => {
+    const labelValue = get(tag, customLabel)
+    const valueValue = get(tag, customValue)
+    const labelSource = labelValue ?? tag.label
+    const valueSource = valueValue ?? tag.value
+    const label = labelSource == null ? '' : String(labelSource)
+    const value = valueSource == null ? '' : String(valueSource)
     const tempTag: Tag = {
       ...tag,
       _type: 'tag',
-      _key: tag.value,
+      _key: value,
       _labelTemp: tag.label,
       _valueTemp: tag.value,
-      label: get(tag, customLabel),
-      value: get(tag, customValue),
+      label,
+      value,
     }
     return tempTag
   }
@@ -229,12 +235,14 @@ export function revertTags<IsReference extends boolean, IsMulti extends boolean>
     const tagsArray = Array.isArray(tags) ? tags : [tags]
 
     // revert and return array
-    return tagsArray.map(revert)
+    if (isReference) return tagsArray.map(revert) as RefTag[]
+    return tagsArray.map(revert) as GeneralTag[]
   }
 
   // not multi, so ensure is a single tag
   const tag = Array.isArray(tags) ? tags[0] : tags
 
   // revert tag
-  return revert(tag)
+  if (isReference) return revert(tag) as RefTag
+  return revert(tag) as GeneralTag
 }

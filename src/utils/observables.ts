@@ -111,7 +111,7 @@ const predefinedTagWrapper = async (
   predefinedTags:
     | (() => Promise<GeneralTag | GeneralTag[] | RefTag | RefTag[]>)
     | (() => GeneralTag | GeneralTag[] | RefTag | RefTag[]),
-): Promise<GeneralTag[] | RefTag[]> => {
+): Promise<Array<GeneralTag | RefTag>> => {
   const tags = await predefinedTags()
   if (!Array.isArray(tags)) return [tags]
   return tags

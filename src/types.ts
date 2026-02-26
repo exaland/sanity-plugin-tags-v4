@@ -11,8 +11,9 @@ import {
 export type GeneralSubscription = Subscription | {unsubscribe: () => void}
 
 export interface RefTag {
-  _ref: string
+  _ref: unknown
   _type: string
+  [key: string]: unknown
 }
 
 export interface GeneralTag {
@@ -27,7 +28,13 @@ export interface Tag {
   [key: string]: unknown
 }
 
-export type UnrefinedTags = RefTag | GeneralTag | RefTag[] | GeneralTag[] | undefined
+export type UnrefinedTags =
+  | RefTag
+  | GeneralTag
+  | Array<RefTag | GeneralTag>
+  | RefTag[]
+  | GeneralTag[]
+  | undefined
 
 export type RefinedTags = Tag | Tag[] | undefined
 
