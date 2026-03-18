@@ -1,3 +1,5 @@
+[![Publish NPM Package](https://github.com/exaland/sanity-plugin-tags-v4/actions/workflows/publish-package.yml/badge.svg)](https://github.com/exaland/sanity-plugin-tags-v4/actions/workflows/publish-package.yml)
+
 # sanity-plugin-tags-v4
 
 > This is a **Sanity Studio v5** plugin with **React 19** support.
