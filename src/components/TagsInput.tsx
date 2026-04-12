@@ -192,13 +192,16 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
 
     // handle any change made to the select
     const handleChange = useCallback(
-      (inputValue: RefinedTags) => {
+      (inputValue: RefinedTags | null) => {
+        // normalize null to undefined (react-select passes null when isClearable clears the value)
+        const normalizedInput = inputValue ?? undefined
+
         // set the new option
-        setSelected(inputValue)
+        setSelected(normalizedInput)
 
         // revert the tags to their initial values for saving
         const tagsForEvent = revertTags({
-          tags: inputValue,
+          tags: normalizedInput,
           customLabel,
           customValue,
           isMulti,
