@@ -227,8 +227,8 @@ export function revertTags<IsReference extends boolean, IsMulti extends boolean>
 }: RevertTagsInput<IsReference, IsMulti>): UnrefinedTags {
   const revert = revertTag({customLabel, customValue, isReference})
 
-  // if tags are undefined
-  if (tags === undefined) return undefined
+  // if tags are undefined or null (e.g. cleared via isClearable in react-select)
+  if (tags === undefined || tags === null) return undefined
 
   if (isMulti) {
     // ensure it is actually an array
