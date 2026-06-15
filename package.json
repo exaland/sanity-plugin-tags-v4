@@ -1,6 +1,6 @@
 {
   "name": "sanity-plugin-tags-v4",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "A multi-tag input for Sanity Studio",
   "keywords": [
     "sanity",
@@ -45,36 +45,36 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@sanity/incompatible-plugin": "^1.0.4",
+    "@sanity/incompatible-plugin": "^1.0.5",
     "react-select": "^5.10.2"
   },
   "devDependencies": {
-    "@sanity/pkg-utils": "^2.2.13",
-    "@sanity/plugin-kit": "^4.0.20",
-    "@types/react": "^19.0",
+    "@sanity/pkg-utils": "^10.5.5",
+    "@sanity/plugin-kit": "^3.1.12",
+    "@types/react": "^19.2.7",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
-    "eslint": "^8.50.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-config-sanity": "^7.0.0",
-    "eslint-plugin-prettier": "^5.0.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint": "latest",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-config-sanity": "^7.1.4",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.0.0",
-    "prettier-plugin-packagejson": "^2.4.3",
-    "react": "^19.0",
-    "react-dom": "^19.0",
-    "react-is": "^19.0",
+    "prettier": "^3.8.4",
+    "prettier-plugin-packagejson": "^3.0.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-is": "^19.2.7",
     "rimraf": "^4.1.2",
     "rollup-plugin-postcss": "^4.0.2",
-    "typescript": "^5.2.0"
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
-    "react": "^19.0",
-    "react-dom": "^19.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "rxjs": "^7.8.0",
-    "sanity": "^5.12.0",
+    "sanity": "^5.14.1",
     "styled-components": "^6.1.0"
   },
   "engines": {
@@ -86,7 +86,8 @@
     "Leo Baker-Hytch <l.bakerhytch@gmail.com>"
   ],
   "overrides": {
-    "esbuild": "0.25.9"
+    "esbuild": "latest",
+    "serialize-javascript": "^7.0.5"
   },
   "sanityPlugin": {
     "verifyPackage": {
