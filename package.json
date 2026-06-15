@@ -50,10 +50,10 @@
   },
   "devDependencies": {
     "@sanity/pkg-utils": "^10.5.5",
-    "@sanity/plugin-kit": "^3.1.12",
+    "@sanity/plugin-kit": "^4.0.20",
     "@types/react": "^19.2.7",
-    "@typescript-eslint/eslint-plugin": "^8.54.0",
-    "@typescript-eslint/parser": "^8.54.0",
+    "@typescript-eslint/eslint-plugin": "^8.61.0",
+    "@typescript-eslint/parser": "^8.61.0",
     "eslint": "latest",
     "eslint-config-prettier": "^10.1.8",
     "eslint-config-sanity": "^7.1.4",
