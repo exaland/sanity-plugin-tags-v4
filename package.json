@@ -17,8 +17,11 @@
   "license": "MIT",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
+      "source": "./src/index.ts",
+      "require": "./dist/index.js",
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.js"
+      "default": "./dist/index.esm.js"
     },
     "./package.json": "./package.json"
   },
@@ -85,7 +88,7 @@
   "overrides": {
     "esbuild": "latest",
     "serialize-javascript": "^7.0.5"
-  ],
+  },
   "sanityPlugin": {
     "verifyPackage": {
       "tsc": false,
