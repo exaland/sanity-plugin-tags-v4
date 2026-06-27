@@ -1,6 +1,6 @@
 {
   "name": "sanity-plugin-tags-v4",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "A multi-tag input for Sanity Studio",
   "keywords": [
     "sanity",
@@ -15,25 +15,24 @@
     "url": "git+ssh://git@github.com/exaland/sanity-plugin-tags-v4.git"
   },
   "license": "MIT",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.esm.js",
-  "source": "./src/index.ts",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.esm.js"
     },
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
   "type": "module",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
-    "build": "run-s clean && tsc -p tsconfig.dist.json && plugin-kit verify-package --silent && pkg-utils --strict",
+    "build": "run-s clean && tsc -p tsconfig.dist.json && pkg-utils build --strict && plugin-kit verify-package --silent",
     "clean": "rimraf dist",
     "format": "prettier --write --cache --ignore-unknown .",
     "link-watch": "plugin-kit link-watch",
