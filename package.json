@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@sanity/pkg-utils": "^10.5.5",
-    "@sanity/plugin-kit": "^4.0.20",
+    "@sanity/plugin-kit": "^6.0.0",
     "@types/react": "^19.2.7",
     "@typescript-eslint/eslint-plugin": "^8.61.0",
     "@typescript-eslint/parser": "^8.61.0",
