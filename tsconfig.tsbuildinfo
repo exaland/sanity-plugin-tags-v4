@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/modules.d.ts","./src/types.ts","./src/components/referencewarnings.tsx","./src/components/tagsinput.tsx","./src/schemas/tag.ts","./src/schemas/tags.ts","./src/utils/client.ts","./src/utils/helpers.ts","./src/utils/hooks.ts","./src/utils/mutators.ts","./src/utils/observables.ts","./package.config.ts"],"errors":true,"version":"6.0.3"}

@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.settings",
+  "extends": "./tsconfig.settings.json",
   "include": ["./src"],
   "exclude": [
     "./src/**/__fixtures__",
@@ -8,11 +8,13 @@
     "./src/**/*.test.tsx"
   ],
   "compilerOptions": {
-    "rootDir": ".",
+    "ignoreDeprecations": "6.0",
+    "rootDir": "./src",
     "outDir": "./dist",
     "jsx": "preserve",
     "module": "preserve",
-    "noEmit": true,
+    "noEmit": false,
+    "noCheck": true,
     "emitDeclarationOnly": true
   }
 }

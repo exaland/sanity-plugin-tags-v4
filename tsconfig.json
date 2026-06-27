@@ -1,9 +1,15 @@
 {
-  "extends": "./tsconfig.settings",
+  "extends": "./tsconfig.settings.json",
   "include": ["./src", "./package.config.ts"],
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "rootDir": ".",
     "jsx": "react-jsx",
-    "noEmit": true
+    "noEmit": true,
+    "noCheck": true,
+    "outDir": "dist",
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "declarationMap": true,
   }
 }

@@ -2,6 +2,8 @@
 
 # sanity-plugin-tags-v4
 
+> **NEW** This is a **Sanity Studio v6** plugin with **React 19** support.
+
 > This is a **Sanity Studio v5** plugin with **React 19** support.
 
 A multi-tag input for sanity studio. Fully featured with autocomplete capabilities, live updates, predefined tag options, style and component customizability, and much more.

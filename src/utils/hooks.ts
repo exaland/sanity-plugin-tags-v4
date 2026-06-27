@@ -22,14 +22,13 @@ export const useLoading = ({
   const [loadingOptions, setLoadingOptions] = React.useState(initialLoadingOptions)
   const [isLoading, setIsLoading] = React.useState(initialState)
 
-  React.useEffect(() => {
+  React.useMemo(() => {
     let loaded = false
     if (Object.keys(loadingOptions).length) {
       for (const option in loadingOptions) {
         if (loadingOptions[option]) loaded = true
       }
     }
-
     setIsLoading(loaded)
   }, [loadingOptions])
 
@@ -58,12 +57,11 @@ export const useOptions = ({
   const [options, setOptions] = React.useState(initialState)
   const [groupOptions, setGroupOptions] = React.useState({} as Options)
 
-  React.useEffect(() => {
+  React.useMemo(() => {
     const opts: Tag[] = []
     for (const group in groupOptions) {
       if (Array.isArray(groupOptions[group])) opts.push(...groupOptions[group])
     }
-
     setOptions(filterUniqueTags(opts))
   }, [groupOptions])
 
