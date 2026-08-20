@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.22] - 2026-08-20
+ - **React 19.2 Support**: Updated plugin to be fully compatible with React 19.2
+ - **Sanity Studio v6.10 Support**: Ensured compatibility with Sanity Studio v6.10
+ 
+
 ## [1.0.5] - 2026-01-21
 
 ### 🚀 New Features
