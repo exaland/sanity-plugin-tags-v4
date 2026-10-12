@@ -1,6 +1,6 @@
 {
   "name": "sanity-plugin-tags-v4",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "A multi-tag input for Sanity Studio",
   "keywords": [
     "sanity",
@@ -15,19 +15,27 @@
     "url": "git+ssh://git@github.com/exaland/sanity-plugin-tags-v4.git"
   },
   "license": "MIT",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.esm.js",
   "module": "./dist/index.esm.js",
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "import": "./dist/index.esm.js",
-      "require": "./dist/index.cjs",
       "default": "./dist/index.esm.js"
+    },
+    "./style.css": {
+      "types": "./dist/style-css.d.ts",
+      "browser": "./dist/style.css",
+      "style": "./dist/style.css",
+      "node": "./dist/style-css.js",
+      "default": "./dist/style-css.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.esm.d.ts",
   "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "files": [
     "dist"
   ],
@@ -41,14 +49,15 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@tsdown/css": "^0.22.14",
     "react-select": "^5.10.2"
   },
   "devDependencies": {
-    "@sanity/pkg-utils": "^10.7.2",
-    "@sanity/plugin-kit": "^6.0.0",
-    "@types/react": "^19.2.7",
-    "@typescript-eslint/eslint-plugin": "^8.61.0",
-    "@typescript-eslint/parser": "^8.61.0",
+    "@sanity/pkg-utils": "^12.3.4",
+    "@sanity/plugin-kit": "^10.0.12",
+    "@types/react": "^19.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.71.2",
+    "@typescript-eslint/parser": "^8.71.2",
     "eslint": "latest",
     "eslint-config-prettier": "^10.1.8",
     "eslint-config-sanity": "^7.1.4",
@@ -56,20 +65,20 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.8.4",
+    "prettier": "^3.9.10",
     "prettier-plugin-packagejson": "^3.0.2",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "react-is": "^19.2.7",
-    "rimraf": "^4.1.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-is": "^19.3.0",
+    "rimraf": "^6.1.3",
     "rollup-plugin-postcss": "^4.0.2",
-    "rxjs": "^7.8.0",
-    "typescript": "^6.0.3"
+    "rxjs": "^7.8.2",
+    "typescript": "latest"
   },
   "peerDependencies": {
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "sanity": "^6.10.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "sanity": "^6.18.0",
     "styled-components": "^6.1.0"
   },
   "engines": {
@@ -91,8 +100,34 @@
       "scripts": false,
       "esmOnly": false,
       "bannedFiles": false,
-      "eslintImports": false
+      "eslintImports": false,
+      "oxlint": false,
+      "oxfmt": false,
+      "oxfmtCheck": false,
+      "oxlintCheck": false,
+      "prettierCheck": false,
+      "prettier": false
     }
   },
-  "sanityExchangeUrl": "https://www.sanity.io/plugins/tags"
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": "./dist/index.esm.js",
+      "./style.css": {
+        "types": "./dist/style-css.d.ts",
+        "browser": "./dist/style.css",
+        "style": "./dist/style.css",
+        "node": "./dist/style-css.js",
+        "default": "./dist/style-css.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "inlinedDependencies": {
+    "@sanity/color": "3.0.9",
+    "@sanity/ui": "4.4.4",
+    "react-is": "19.3.0",
+    "rxjs": "7.8.2",
+    "tslib": "2.8.1"
+  }
 }
