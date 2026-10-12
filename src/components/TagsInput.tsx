@@ -1,4 +1,3 @@
-import {usePrefersDark} from '@sanity/ui'
 import React, {forwardRef, useCallback, useEffect} from 'react'
 import Select from 'react-select'
 import CreatableSelect from 'react-select/creatable'
@@ -24,7 +23,6 @@ import {
   getTagsFromRelated,
 } from '../utils/observables'
 import {ReferenceCreateWarning, ReferencePredefinedWarning} from './ReferenceWarnings'
-import styles from './TagsInput.module.css'
 
 // eslint-disable-next-line no-warning-comments
 // TODO: Allow reference creation inline
@@ -48,7 +46,6 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
     const [selected, setSelected] = React.useState<RefinedTags>(undefined)
     const [isLoading, , setLoadOption] = useLoading({})
     const [options, , setTagOption] = useOptions({})
-    const prefersDark = usePrefersDark()
 
     const {
       schemaType, // Schema information
@@ -258,38 +255,40 @@ export const TagsInput = forwardRef<StateManagedSelect, TagsInputProps>(
       onChange: handleChange,
       isDisabled: readOnly || isLoading,
       styles: {
+        control: (base) => ({
+          ...base,
+          backgroundColor: 'var(--card-bg-color)',
+          borderColor: 'var(--card-border-color)',
+          transition: 'none',
+          '&:hover': {borderColor: 'var(--card-border-color)'},
+        }),
+        input: (base) => ({...base, color: 'var(--input-fg-color)'}),
         menu: (base) => ({
           ...base,
-          zIndex: 15, // Adjusted dropdown menu z-index to prevent overlap with background items
+          backgroundColor: 'var(--card-bg-color)',
+          border: '1px solid var(--card-border-color)',
+          zIndex: 15,
+        }),
+        option: (base) => ({
+          ...base,
+          backgroundColor: 'var(--card-bg-color)',
+          color: 'var(--input-fg-color)',
+          '&:hover': {backgroundColor: 'var(--card-border-color)'},
+        }),
+        indicatorSeparator: (base) => ({...base, backgroundColor: 'var(--card-border-color)'}),
+        placeholder: (base) => ({...base, color: 'var(--input-fg-color)'}),
+        singleValue: (base) => ({...base, color: 'var(--input-fg-color)'}),
+        multiValue: (base) => ({...base, backgroundColor: 'var(--card-border-color)'}),
+        multiValueLabel: (base) => ({...base, color: 'var(--card-fg-color)'}),
+        multiValueRemove: (base) => ({
+          ...base,
+          color: 'var(--card-fg-color)',
+          '&:hover': {
+            ...base[':hover'],
+            color: '#de350b',
+          },
         }),
       },
-      classNames: prefersDark
-        ? {
-            container: () => styles.container,
-            control: () => styles.control,
-            input: () => styles.input,
-            menu: () => styles.menu,
-            option: () => styles.option,
-            indicatorSeparator: () => styles.indicatorSeparator,
-            placeholder: () => styles.placeholder,
-            singleValue: () => styles.singleValue,
-            multiValue: () => styles.multiValue,
-            multiValueLabel: () => styles.multiValueLabel,
-            multiValueRemove: () => styles.multiValueRemove,
-          }
-        : {
-            container: () => styles.container,
-            control: () => styles.control,
-            input: () => styles.input,
-            menu: () => styles.menu,
-            option: () => styles.option,
-            indicatorSeparator: () => styles.indicatorSeparator,
-            placeholder: () => styles.placeholder,
-            singleValue: () => styles.singleValue,
-            multiValue: () => styles.multiValue,
-            multiValueLabel: () => styles.multiValueLabel,
-            multiValueRemove: () => styles.multiValueRemove,
-          },
       ...reactSelectOptions,
     } as SelectProps
 

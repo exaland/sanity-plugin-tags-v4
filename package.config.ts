@@ -4,6 +4,4 @@ export default defineConfig({
   legacyExports: true,
   dist: 'dist',
   tsconfig: 'tsconfig.dist.json',
-
-  css: true,
 })

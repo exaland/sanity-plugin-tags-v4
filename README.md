@@ -23,13 +23,15 @@ Add it as a plugin in `sanity.config.ts` (or .js):
 
 ```ts
 import {defineConfig} from 'sanity'
-import {tags} from 'sanity-plugin-tags'
+import {tags} from 'sanity-plugin-tags-v4'
 
 export default defineConfig({
   //...
   plugins: [tags({})],
 })
 ```
+
+Styles are included in the plugin; no separate CSS import is needed. Remove any existing `import 'sanity-plugin-tags-v4/style.css'` from your configuration.
 
 Simply use 'tag' or 'tags' as a type (single or multi select respectively) in your fields. If you want autocompletion, set the `includeFromRelated` option to the name of your field.
 

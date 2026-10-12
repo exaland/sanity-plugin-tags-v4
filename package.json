@@ -1,6 +1,6 @@
 {
   "name": "sanity-plugin-tags-v4",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "description": "A multi-tag input for Sanity Studio",
   "keywords": [
     "sanity",
@@ -22,20 +22,11 @@
       "source": "./src/index.ts",
       "default": "./dist/index.esm.js"
     },
-    "./style.css": {
-      "types": "./dist/style-css.d.ts",
-      "browser": "./dist/style.css",
-      "style": "./dist/style.css",
-      "node": "./dist/style-css.js",
-      "default": "./dist/style-css.js"
-    },
     "./package.json": "./package.json"
   },
   "types": "./dist/index.esm.d.ts",
   "type": "module",
-  "sideEffects": [
-    "**/*.css"
-  ],
+  "sideEffects": false,
   "files": [
     "dist"
   ],
@@ -113,18 +104,10 @@
     "access": "public",
     "exports": {
       ".": "./dist/index.esm.js",
-      "./style.css": {
-        "types": "./dist/style-css.d.ts",
-        "browser": "./dist/style.css",
-        "style": "./dist/style.css",
-        "node": "./dist/style-css.js",
-        "default": "./dist/style-css.js"
-      },
       "./package.json": "./package.json"
     }
   },
   "inlinedDependencies": {
-    "@sanity/color": "3.0.9",
     "@sanity/ui": "4.4.4",
     "react-is": "19.3.0",
     "rxjs": "7.8.2",
