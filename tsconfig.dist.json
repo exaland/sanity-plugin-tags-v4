@@ -11,7 +11,7 @@
     "ignoreDeprecations": "6.0",
     "rootDir": "./src",
     "outDir": "./dist",
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "module": "preserve",
     "noEmit": false,
     "noCheck": true,
